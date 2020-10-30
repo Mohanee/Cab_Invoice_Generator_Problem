@@ -39,5 +39,21 @@ namespace Cab_Invoice_Generation_Test
             Assert.AreEqual(105, actualFare);
             Assert.AreEqual(5, actualFare2);
         }
+
+
+        /// <summary>
+        /// To test for correct invoice summary
+        /// </summary>
+        [Test]
+        public void Given_MultipleDistance_and_Time_Should_Return_InvoiceSummary()
+        {
+            double[] distance = { 15, 10, 5,10 }; 
+            int[] time = { 20, 10, 5, 15};
+
+            invoiceGenerator.MultipleTripFareCalculation(time, distance);
+            string actualInvoice = invoiceGenerator.GenerateInvoiceSummary();
+
+            Assert.AreEqual("4,450,112.5", actualInvoice);
+        }
     }
 }
