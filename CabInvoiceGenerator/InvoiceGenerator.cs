@@ -12,31 +12,57 @@ namespace CabInvoiceGenerator
         /// </summary>
         const int COST_PER_KM = 10;
         const int COST_PER_MIN = 1;
-        const double MIN_FARE = 5;
+        double MIN_FARE = 5;
         int NO_OF_RIDES = 1;
         double totalAmt = 0;
+
+
+        /// <summary>
+        /// RideTypes in enum format
+        /// </summary>
+        public enum RideType
+        {
+            PREMIER, NORMAL
+        }
+
 
         /// <summary>
         /// Method to calculate total fare for a single ride
         /// </summary>
         /// <param name="time">total time travelled</param>
         /// <param name="distance">total distance travelled</param>
+        /// <param name="type">Type of Ride(Premier/Normal)</param>
         /// <returns>Total Fare for single ride</returns>
-        public double SingleTripFareCalculation(int time, double distance)
+        public double SingleTripFareCalculation(int time, double distance, RideType type)
         {
-            if (distance == 0)
-            {
-                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Distance cannot be null");
+            try 
+            { 
+                if (distance == 0)
+                {
+                    throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Distance cannot be null");
+                }
+                else if (time == 0)
+                {
+                    throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Time cannot be null");
+                }
+                else
+                {
+                    if (type.Equals(RideType.PREMIER))
+                    {
+                        totalAmt = distance * COST_PER_KM * 1.5 + time * COST_PER_MIN * 2;
+                        MIN_FARE = 20;
+                    }
+                    else
+                    {
+                        totalAmt = distance * COST_PER_KM + time * COST_PER_MIN;
+                    }
+                    return (Math.Max(MIN_FARE, totalAmt));
+                }
             }
-            else if (time == 0)
-            {
-                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Time cannot be null");
-            }
-            else
-            {
-                totalAmt = distance * COST_PER_KM + time * COST_PER_MIN;
-                return (Math.Max(MIN_FARE, totalAmt));
-            }
+             catch(InvoiceException e)
+                {
+                    throw new InvoiceException(InvoiceException.ExceptionType.INVALID_RIDE_TYPE, "Ride type not valid");
+                }
         }
 
 
@@ -45,26 +71,48 @@ namespace CabInvoiceGenerator
         /// </summary>
         /// <param name="time">Array of distance travelled per ride</param>
         /// <param name="distance">Array of time taken per ride</param>
+        /// <param name="type">Type of Ride(Premier/Normal)</param>
         /// <returns>Sum total Fare of all the rides</returns>
-        public double MultipleTripFareCalculation(int[] time, double[] distance)
+        public double MultipleTripFareCalculation(int[] time, double[] distance, RideType type)
         {
-            if (distance.Length==0)
+            try
             {
-                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Distance cannot be null");
-            }
-            else if(time.Length==0)
-            {
-                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Time cannot be null");
-            }
-
-            else
-            {
-                NO_OF_RIDES = distance.Length;
-                for (int i = 0; i < distance.Length; i++)
+                if (distance.Length == 0)
                 {
-                   totalAmt += distance[i] * COST_PER_KM + time[i] * COST_PER_MIN;
+                    throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Distance cannot be null");
                 }
-                return (Math.Max(MIN_FARE, totalAmt));
+                else if (time.Length == 0)
+                {
+                    throw new InvoiceException(InvoiceException.ExceptionType.INVALID_DISTANCE, "Time cannot be null");
+                }
+
+                else
+                {
+                    if (type.Equals(RideType.PREMIER))
+                    {
+                        NO_OF_RIDES = distance.Length;
+
+                        for (int i = 0; i < distance.Length; i++)
+                        {
+                            totalAmt += distance[i] * COST_PER_KM * 1.5 + time[i] * COST_PER_MIN * 2;
+                            MIN_FARE = 20;
+                        }
+                    }
+                    else
+                    {
+                        NO_OF_RIDES = distance.Length;
+
+                        for (int i = 0; i < distance.Length; i++)
+                        {
+                            totalAmt += distance[i] * COST_PER_KM + time[i] * COST_PER_MIN;
+                        }
+                    }
+                    return (Math.Max(MIN_FARE, totalAmt));
+                }
+            }
+            catch (InvoiceException e)
+            {
+                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_RIDE_TYPE, "Ride type not valid");
             }
         }
 
@@ -73,25 +121,58 @@ namespace CabInvoiceGenerator
         /// Method to calculate total fare of all the rides
         /// </summary>
         /// <param name="rideList">List of ride details</param>
+        /// <param name="type">Type of Ride(Premier/Normal)</param>
         /// <returns>Total fare</returns>
-        public double MultipleTripFareCalculationList(string userID)
+        public double MultipleTripFareCalculationList(string userID, RideType type)
         {
-            RideRepository rideRepo = new RideRepository();
-            if (rideRepo.rideRepoDict.ContainsKey(userID))
+            try
             {
-                List<RideDetails> rideList = rideRepo.GetRideDetailsofUser(userID);
-                if (rideList.Count != 0)
+                if (type.Equals(RideType.PREMIER))
                 {
-                    foreach (var rides in rideList)
+                    RideRepository rideRepo = new RideRepository();
+                    if (rideRepo.rideRepoDict.ContainsKey(userID))
                     {
-                        totalAmt += rides.distance * COST_PER_KM + rides.time * COST_PER_MIN;
+                        List<RideDetails> rideList = rideRepo.GetRideDetailsofUser(userID);
+                        if (rideList.Count != 0)
+                        {
+                            foreach (var rides in rideList)
+                            {
+                                totalAmt += rides.distance * COST_PER_KM * 1.5 + rides.time * COST_PER_MIN * 2;
+                                MIN_FARE = 20;
+                            }
+                        }
+                        return (Math.Max(MIN_FARE, totalAmt));
+                    }
+                    else
+                    {
+                        throw new InvoiceException(InvoiceException.ExceptionType.INVALID_USER_ID, "UserID not found");
                     }
                 }
-                return (Math.Max(MIN_FARE, totalAmt));
+                else
+                {
+                    RideRepository rideRepo = new RideRepository();
+                    if (rideRepo.rideRepoDict.ContainsKey(userID))
+                    {
+                        List<RideDetails> rideList = rideRepo.GetRideDetailsofUser(userID);
+                        if (rideList.Count != 0)
+                        {
+                            foreach (var rides in rideList)
+                            {
+                                totalAmt += rides.distance * COST_PER_KM + rides.time * COST_PER_MIN;
+                            }
+                        }
+                        return (Math.Max(MIN_FARE, totalAmt));
+                    }
+                    else
+                    {
+                        throw new InvoiceException(InvoiceException.ExceptionType.INVALID_USER_ID, "UserID not found");
+                    }
+
+                }
             }
-            else
+            catch(InvoiceException e)
             {
-                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_USER_ID, "UserID not found");
+                throw new InvoiceException(InvoiceException.ExceptionType.INVALID_RIDE_TYPE, "Ride type not valid");
             }
         }
 

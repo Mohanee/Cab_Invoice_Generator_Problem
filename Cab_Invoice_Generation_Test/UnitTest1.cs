@@ -22,10 +22,17 @@ namespace Cab_Invoice_Generation_Test
         [Test]
         public void Given_MultipleDistance_and_Time_Should_Return_Fare()
         {
-            double[] distance = { 15, 10, 5 }; int[] time = { 20, 10, 5 };
-            double actualFare = invoiceGenerator.MultipleTripFareCalculation(time, distance);
+            try
+            {
+                double[] distance = { 15, 10, 5 }; int[] time = { 20, 10, 5 };
+                double actualFare = invoiceGenerator.MultipleTripFareCalculation(time, distance, InvoiceGenerator.RideType.NORMAL);
 
-            Assert.AreEqual(335.0, actualFare);
+                Assert.AreEqual(335.0, actualFare);
+            }
+            catch (InvoiceException i)
+            {
+                Assert.AreEqual(InvoiceException.ExceptionType.INVALID_RIDE_TYPE, i.type);
+            }
         }
 
 
@@ -35,12 +42,19 @@ namespace Cab_Invoice_Generation_Test
         [Test]
         public void Given_SingleDistance_and_Time_Should_Return_Fare()
         {
-            double distance1 = 10; int  time1 = 5;
-            double actualFare = invoiceGenerator.SingleTripFareCalculation(time1, distance1);
-            double actualFare2 = invoiceGenerator.SingleTripFareCalculation(2,0.2);         //considering minimum fare criteria
+            try
+            {
+                double distance1 = 10; int time1 = 5;
+                double actualFare = invoiceGenerator.SingleTripFareCalculation(time1, distance1, InvoiceGenerator.RideType.NORMAL);
+                double actualFare2 = invoiceGenerator.SingleTripFareCalculation(2, 0.2, InvoiceGenerator.RideType.NORMAL);         //considering minimum fare criteria
 
-            Assert.AreEqual(105, actualFare);
-            Assert.AreEqual(5, actualFare2);
+                Assert.AreEqual(105, actualFare);
+                Assert.AreEqual(5, actualFare2);
+            }
+            catch (InvoiceException i)
+            {
+                Assert.AreEqual(InvoiceException.ExceptionType.INVALID_RIDE_TYPE, i.type);
+            }
         }
 
 
@@ -50,13 +64,20 @@ namespace Cab_Invoice_Generation_Test
         [Test]
         public void Given_MultipleDistance_and_Time_Should_Return_InvoiceSummary()
         {
-            double[] distance = { 15, 10, 5,10 }; 
-            int[] time = { 20, 10, 5, 15};
+            try
+            {
+                double[] distance = { 15, 10, 5, 10 };
+                int[] time = { 20, 10, 5, 15 };
 
-            invoiceGenerator.MultipleTripFareCalculation(time, distance);
-            string actualInvoice = invoiceGenerator.GenerateInvoiceSummary();
+                invoiceGenerator.MultipleTripFareCalculation(time, distance, InvoiceGenerator.RideType.NORMAL);
+                string actualInvoice = invoiceGenerator.GenerateInvoiceSummary();
 
-            Assert.AreEqual("4,450,112.5", actualInvoice);
+                Assert.AreEqual("4,450,112.5", actualInvoice);
+            }
+            catch(InvoiceException i)
+            {
+                Assert.AreEqual(InvoiceException.ExceptionType.INVALID_RIDE_TYPE, i.type);
+            }
         }
 
 
@@ -77,7 +98,7 @@ namespace Cab_Invoice_Generation_Test
 
             try
             {
-                invoiceGenerator.MultipleTripFareCalculationList("user1");
+                invoiceGenerator.MultipleTripFareCalculationList("user1", InvoiceGenerator.RideType.NORMAL);
                 string actualInvoice = invoiceGenerator.GenerateInvoiceSummary();
 
                 Assert.AreEqual("4,450,112.5", actualInvoice);
@@ -87,7 +108,22 @@ namespace Cab_Invoice_Generation_Test
                 Assert.AreEqual(InvoiceException.ExceptionType.INVALID_USER_ID, e.type);
             }
 
+        }
 
+
+        /// <summary>
+        /// To test invoice for premeir rides
+        /// </summary>
+        [Test]
+        public void Given_RideType_Premier_Should_Return_InvoiceSummary()
+        {
+            double[] distance = { 15, 10, 5, 10 };
+            int[] time = { 20, 10, 5, 15 };
+
+            invoiceGenerator.MultipleTripFareCalculation(time, distance, InvoiceGenerator.RideType.PREMIER);
+            string actualInvoice = invoiceGenerator.GenerateInvoiceSummary();
+
+            Assert.AreEqual("4,700,175", actualInvoice);
         }
     }
 }
