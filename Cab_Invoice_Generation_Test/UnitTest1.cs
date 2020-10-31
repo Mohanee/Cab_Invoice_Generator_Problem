@@ -1,15 +1,18 @@
 using NUnit.Framework;
 using CabInvoiceGenerator;
+using System.Collections.Generic;
 
 namespace Cab_Invoice_Generation_Test
 {
     public class Tests
     {
         InvoiceGenerator invoiceGenerator;
+        RideRepository rideRepo;
         [SetUp]
         public void Setup()
         {
             invoiceGenerator = new InvoiceGenerator();
+            rideRepo = new RideRepository();
         }
 
         /// <summary>
@@ -54,6 +57,37 @@ namespace Cab_Invoice_Generation_Test
             string actualInvoice = invoiceGenerator.GenerateInvoiceSummary();
 
             Assert.AreEqual("4,450,112.5", actualInvoice);
+        }
+
+
+        /// <summary>
+        /// To test for correct invoice asper UserID
+        /// </summary>
+        [Test]
+        public void Given_UserID_and_RideList_Should_Return_InvoiceSummary()
+        {
+            List<RideDetails> user1Details =  new List<RideDetails>();
+                
+            user1Details.Add( new RideDetails(20,15));
+            user1Details.Add(new RideDetails(10, 10));
+            user1Details.Add(new RideDetails(5, 5));
+            user1Details.Add(new RideDetails(15, 10));
+        
+            rideRepo.AddUser("user1", user1Details);
+
+            try
+            {
+                invoiceGenerator.MultipleTripFareCalculationList("user1");
+                string actualInvoice = invoiceGenerator.GenerateInvoiceSummary();
+
+                Assert.AreEqual("4,450,112.5", actualInvoice);
+            }
+            catch (InvoiceException e)
+            {
+                Assert.AreEqual(InvoiceException.ExceptionType.INVALID_USER_ID, e.type);
+            }
+
+
         }
     }
 }
